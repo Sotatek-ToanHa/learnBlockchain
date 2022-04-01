@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Form, Input, Button, message as msg } from "antd";
 import "./style.css";
 import { ethers } from "ethers";
+import { useWeb3React, UnsupportedChainIdError } from "@web3-react/core";
+import { injected } from "../wallet/Connectors"
+
 
 declare let window: any;
 
@@ -10,7 +13,9 @@ type FormType = {
   amount: string;
 };
 
+
 const Home: React.FC = () => {
+  const { active, account, library, connector, activate, deactivate } = useWeb3React()
   const initialValues: FormType = {
     receiver: "0xaDCAf01fB71781D245951D245a45E09a26440d46",
     amount: "0.00001",
@@ -37,16 +42,17 @@ const Home: React.FC = () => {
 
     getBalance(account);
   };
-  
+
   const connectWallet = async () => {
     try {
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        if (!!accounts) {
-          accountChangeHandler(accounts[0]);
-        }
+        await activate(injected)
+        // const accounts = await window.ethereum.request({
+        //   method: "eth_requestAccounts",
+        // });
+        // if (!!accounts) {
+        //   accountChangeHandler(accounts[0]);
+        // }
       } else {
         msg.error("install metamask extension");
       }
@@ -70,9 +76,9 @@ const Home: React.FC = () => {
       await tx.wait(1);
       setIsLoading(false);
     } catch (e: any) {
-      console.log({e})
+      console.log({ e });
       setIsLoading(false);
-      if(e.code === 4001) {
+      if (e.code === 4001) {
         return msg.error("User denied transaction signature");
       }
       msg.error(e?.reason);
